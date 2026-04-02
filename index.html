@@ -13,7 +13,7 @@ body { margin: 0; background: #f0ebf8; font-family: 'Roboto', sans-serif; font-s
 h1 { margin: 0; font-size: 24px; }
 .question-card { background: #fff; padding: 15px 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); border-left: 4px solid #673ab7; }
 label { display:block; margin-bottom:4px; font-weight:500; }
-textarea, select, input[type="text"], input[type="date"] { width: 100%; border: none; border-bottom: 2px solid #dadce0; padding: 4px 6px; font-size: 14px; background: transparent; }
+textarea, select, input[type="text"], input[type="date"], input[type="password"] { width: 100%; border: none; border-bottom: 2px solid #dadce0; padding: 4px 6px; font-size: 14px; background: transparent; }
 textarea:focus, select:focus, input:focus { outline: none; border-bottom: 2px solid #673ab7; }
 select { appearance: none; background-repeat: no-repeat; background-position: right 5px center; background-size: 16px; cursor: pointer; }
 .currency-input { position: relative; display: flex; align-items: center; }
@@ -35,6 +35,8 @@ button:hover:enabled { background: #5e35b1; }
 #reportTable { margin-top: 30px; border-collapse: collapse; }
 #reportTable th, #reportTable td { border: 1px solid #ccc; padding: 4px; font-size:8px; }
 #reportTable th { background: #eee; }
+/* Скриване на таблиците преди парола */
+#mainContent { display:none; }
 </style>
 <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
 <script>
@@ -47,85 +49,93 @@ Parse.serverURL = 'https://parseapi.back4app.com/';
     <div class="header"></div>
     <div class="form-title"><h1>ОТЧЕТ</h1></div>
 
-    <div class="question-card">
-        <label>Дата</label>
-        <div style="display:flex; align-items:center; gap:8px;">
-            <input type="date" id="dateInput" style="opacity:0; position:absolute; width:1px; height:1px;">
-            <button id="dateBtn" type="button" style="width:70px; height:70px; background:#f0f0f0; border:none; border-radius:12px; cursor:pointer; box-shadow:0 3px 6px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="#673ab7">
-                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 18H5V9h14v13zm-7-7h5v5h-5v-5z"/>
-                </svg>
-            </button>
+    <div class="question-card" id="passwordCard">
+        <label>Въведете парола</label>
+        <input type="password" id="passwordInput" placeholder="Парола">
+        <button id="passwordBtn">Вход</button>
+    </div>
+
+    <div id="mainContent">
+        <div class="question-card">
+            <label>Дата</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <input type="date" id="dateInput" style="opacity:0; position:absolute; width:1px; height:1px;">
+                <button id="dateBtn" type="button" style="width:70px; height:70px; background:#f0f0f0; border:none; border-radius:12px; cursor:pointer; box-shadow:0 3px 6px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="#673ab7">
+                        <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 18H5V9h14v13zm-7-7h5v5h-5v-5z"/>
+                    </svg>
+                </button>
+            </div>
         </div>
-    </div>
 
-    <div class="question-card">
-        <label>Избери опция</label>
-        <select id="optionSelect">
-            <option disabled selected>Избери...</option>
-            <option>ПРИХОД БАР МАККУИН</option>
-            <option>ПРИХОД МАККУИН</option>
-            <option>ПРИХОД БАР СЪНСЕТ</option>
-            <option>ПРИХОД АНИМАТОР</option>
-            <option>ПРИХОД КАПАРО</option>
-            <option>ДУГИ ПРИХОДИ</option>
-            <option disabled>─────────────</option>
-            <option>РАЗХОД С ФАКТУРИ</option>
-            <option>РАЗХОД БЕЗ ФАКТУРИ</option>
-        </select>
-    </div>
-
-    <div class="question-card">
-        <label>Въведете сума</label>
-        <div class="currency-input">
-            <span class="currency-left">€</span>
-            <input type="text" placeholder="0.00" id="sumInput">
+        <div class="question-card">
+            <label>Избери опция</label>
+            <select id="optionSelect">
+                <option disabled selected>Избери...</option>
+                <option>ПРИХОД БАР МАККУИН</option>
+                <option>ПРИХОД МАККУИН</option>
+                <option>ПРИХОД БАР СЪНСЕТ</option>
+                <option>ПРИХОД АНИМАТОР</option>
+                <option>ПРИХОД КАПАРО</option>
+                <option>ДУГИ ПРИХОДИ</option>
+                <option disabled>─────────────</option>
+                <option>РАЗХОД С ФАКТУРИ</option>
+                <option>РАЗХОД БЕЗ ФАКТУРИ</option>
+            </select>
         </div>
-    </div>
 
-    <div class="question-card">
-        <label>Пояснения</label>
-        <textarea rows="2" id="notes"></textarea>
-    </div>
+        <div class="question-card">
+            <label>Въведете сума</label>
+            <div class="currency-input">
+                <span class="currency-left">€</span>
+                <input type="text" placeholder="0.00" id="sumInput">
+            </div>
+        </div>
 
-    <div class="submit-box">
-        <button id="submitBtn" disabled>Изпрати</button>
-    </div>
+        <div class="question-card">
+            <label>Пояснения</label>
+            <textarea rows="2" id="notes"></textarea>
+        </div>
 
-    <table id="reportTable">
-        <thead>
-            <tr><th>Дата</th><th>Опция</th><th>Сума (€)</th><th>Пояснения</th></tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot>
-            <tr>
-                <td colspan="2" class="balance">Крайно салдо:</td>
-                <td id="finalBalance" class="balance">0.00</td>
-                <td></td>
-            </tr>
-        </tfoot>
-    </table>
+        <div class="submit-box">
+            <button id="submitBtn" disabled>Изпрати</button>
+        </div>
 
-    <div class="question-card">
-        <h3>Месечна база</h3>
-        <table id="monthlyTable">
+        <table id="reportTable">
             <thead>
-                <tr>
-                    <th class="date-col">Дата</th>
-                    <th class="expense-col">РАЗХОД С ФАКТУРИ</th>
-                    <th class="expense-col">РАЗХОД БЕЗ ФАКТУРИ</th>
-                    <th class="income-col">ПРИХОД БАР МАККУИН</th>
-                    <th class="income-col">ПРИХОД МАККУИН</th>
-                    <th class="income-col">ПРИХОД БАР СЪНСЕТ</th>
-                    <th class="income-col">ПРИХОД АНИМАТОР</th>
-                    <th class="income-col">ПРИХОД КАПАРО</th>
-                    <th class="text-col">НОМЕР НА КАПАРОТО</th>
-                    <th class="income-col">ДУГИ ПРИХОДИ</th>
-                    <th class="balance-col">КРАЙНО САЛДО</th>
-                </tr>
+                <tr><th>Дата</th><th>Опция</th><th>Сума (€)</th><th>Пояснения</th></tr>
             </thead>
-            <tbody id="monthlyBody"></tbody>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" class="balance">Крайно салдо:</td>
+                    <td id="finalBalance" class="balance">0.00</td>
+                    <td></td>
+                </tr>
+            </tfoot>
         </table>
+
+        <div class="question-card">
+            <h3>Месечна база</h3>
+            <table id="monthlyTable">
+                <thead>
+                    <tr>
+                        <th class="date-col">Дата</th>
+                        <th class="expense-col">РАЗХОД С ФАКТУРИ</th>
+                        <th class="expense-col">РАЗХОД БЕЗ ФАКТУРИ</th>
+                        <th class="income-col">ПРИХОД БАР МАККУИН</th>
+                        <th class="income-col">ПРИХОД МАККУИН</th>
+                        <th class="income-col">ПРИХОД БАР СЪНСЕТ</th>
+                        <th class="income-col">ПРИХОД АНИМАТОР</th>
+                        <th class="income-col">ПРИХОД КАПАРО</th>
+                        <th class="text-col">НОМЕР НА КАПАРОТО</th>
+                        <th class="income-col">ДУГИ ПРИХОДИ</th>
+                        <th class="balance-col">КРАЙНО САЛДО</th>
+                    </tr>
+                </thead>
+                <tbody id="monthlyBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -138,16 +148,21 @@ const dateInput = document.getElementById('dateInput');
 const dateBtn = document.getElementById('dateBtn');
 const monthlyBody = document.getElementById('monthlyBody');
 const reportTbody = document.querySelector('#reportTable tbody');
+const mainContent = document.getElementById('mainContent');
+const passwordInput = document.getElementById('passwordInput');
+const passwordBtn = document.getElementById('passwordBtn');
 
-dateBtn.addEventListener('click', ()=>dateInput.showPicker?.()||dateInput.click());
+const CORRECT_PASSWORD = "1234"; // сложи своя парола тук
 
-function checkForm() {
-    submitBtn.disabled = !(dateInput.value && optionSelect.value && sumInput.value.trim());
-}
-dateInput.addEventListener('input', checkForm);
-optionSelect.addEventListener('input', checkForm);
-sumInput.addEventListener('input', checkForm);
+passwordBtn.addEventListener('click', ()=>{
+    if(passwordInput.value === CORRECT_PASSWORD){
+        document.getElementById('passwordCard').style.display='none';
+        mainContent.style.display='block';
+        loadReports(); // зареждане на Back4App данни
+    } else alert("Грешна парола!");
+});
 
+// Функции за формат и проверка
 function formatDate(dateStr){
     if(!dateStr) return '';
     const d = new Date(dateStr);
@@ -156,6 +171,19 @@ function formatDate(dateStr){
     let year = d.getFullYear();
     return `${day}.${month}.${year}`;
 }
+function checkForm() {
+    submitBtn.disabled = !(dateInput.value && optionSelect.value && sumInput.value.trim());
+}
+dateInput.addEventListener('input', checkForm);
+optionSelect.addEventListener('input', checkForm);
+sumInput.addEventListener('input', function(){
+    this.value = this.value.replace(/[^0-9\.,]/g,'');
+    let parts = this.value.split(/[\.,]/);
+    this.value = parts.shift() + (parts.length?'.'+parts.join(''):'');
+    checkForm();
+});
+
+dateBtn.addEventListener('click', ()=>dateInput.showPicker?.()||dateInput.click());
 
 // Месечна таблица
 let monthlyData = [];
@@ -178,7 +206,6 @@ for(let day=1; day<=31; day++){
     monthlyData.push(cells);
 }
 
-// Обновяване на месечната таблица
 function updateMonthlyTable(dateStr, option, sumValue, notes=''){
     const day = new Date(dateStr).getDate();
     const row = monthlyData[day-1];
@@ -214,35 +241,26 @@ function updateMonthlyTable(dateStr, option, sumValue, notes=''){
     }
 }
 
-sumInput.addEventListener('input', function(){
-    this.value = this.value.replace(/[^0-9\.,]/g,'');
-    let parts = this.value.split(/[\.,]/);
-    this.value = parts.shift() + (parts.length?'.'+parts.join(''):'');
-    checkForm();
-});
-
-// Submit + Back4App запис
+// Изпращане
 submitBtn.addEventListener('click', async function(){
     const selectedOption = optionSelect.value;
     const sumValueStr = sumInput.value.trim();
     const notes = notesInput.value.trim();
     const dateVal = dateInput.value;
     const sumValue = parseFloat(sumValueStr.replace(',','.'));
-
     if(isNaN(sumValue) || sumValue<=0) return;
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Изпращане…';
 
     try {
-        const ReportEntry = Parse.Object.extend("ReportEntry");
-        const entry = new ReportEntry();
-        entry.set("date", dateVal);
-        entry.set("option", selectedOption);
-        entry.set("sum", sumValue);
-        entry.set("notes", notes);
-
-        await entry.save();
+        const Report = Parse.Object.extend("Reports");
+        const report = new Report();
+        report.set("date", dateVal);
+        report.set("option", selectedOption);
+        report.set("sum", sumValue);
+        report.set("notes", notes);
+        await report.save();
 
         updateMonthlyTable(dateVal, selectedOption, sumValue, notes);
 
@@ -257,48 +275,41 @@ submitBtn.addEventListener('click', async function(){
         sumInput.value='';
         notesInput.value='';
         dateInput.value='';
-        dateBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="#673ab7">
-                                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 18H5V9h14v13zm-7-7h5v5h-5v-5z"/>
-                             </svg>`;
-
+        submitBtn.textContent = 'Изпрати';
         alert("Данните бяха изпратени успешно!");
-    } catch(error) {
-        console.error("Грешка при запис в Back4App:", error);
-        alert("Възникна грешка при запис. Опитай отново.");
+    } catch(err){
+        alert("Грешка при запис: "+err.message);
     } finally {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Изпрати';
     }
 });
 
-// Зареждане на всички записи от Back4App при стартиране
-async function loadExistingData(){
-    const ReportEntry = Parse.Object.extend("ReportEntry");
-    const query = new Parse.Query(ReportEntry);
+// Зареждане на Back4App данни
+async function loadReports() {
+    const Report = Parse.Object.extend("Reports");
+    const query = new Parse.Query(Report);
     query.ascending("date");
-
-    try{
+    try {
         const results = await query.find();
-        for(const entry of results){
-            const dateVal = entry.get("date");
-            const option = entry.get("option");
-            const sumValue = parseFloat(entry.get("sum"));
-            const notes = entry.get("notes") || '';
-
-            updateMonthlyTable(dateVal, option, sumValue, notes);
+        results.forEach(obj => {
+            const dateVal = obj.get("date");
+            const option = obj.get("option");
+            const sumValue = parseFloat(obj.get("sum"));
+            const notes = obj.get("notes") || '';
 
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${formatDate(dateVal)}</td><td>${option}</td><td>${sumValue.toFixed(2)}</td><td>${notes}</td>`;
             reportTbody.appendChild(tr);
-        }
+
+            updateMonthlyTable(dateVal, option, sumValue, notes);
+        });
+
         let allBalances = monthlyData.map(r=>parseFloat(r[10].textContent));
         document.getElementById('finalBalance').textContent = allBalances[allBalances.length-1].toFixed(2);
-    } catch(error){
-        console.error("Грешка при зареждане от Back4App:", error);
+    } catch(err) {
+        console.error("Грешка при зареждане на данни: ", err.message);
     }
 }
-
-loadExistingData();
 </script>
 </body>
 </html>
