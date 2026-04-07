@@ -37,7 +37,7 @@ button:disabled { background: #aaa; cursor: not-allowed; }
 #monthlyTable { width: 1000px; border-collapse: separate; border-spacing: 2px; margin-top: 10px; font-size: 8px; }
 #monthlyTable th, #monthlyTable td { padding: 2px 4px; text-align: center; border-radius: 5px; position: relative; min-width: 45px; }
 .date-col { background: #f2f2f2cc; } 
-.expense-col { background: rgba(255,100,100,0.2); color: #800000; }
+.expense-col { background: rgba(255,100,100,0.2); color: #80; }
 .income-col { background: rgba(100,150,255,0.2); color: #003366; }
 .text-col { background: #f8f8f8cc; text-align: left; padding-left: 5px; min-width: 100px; }
 .balance-col { background: rgba(144,238,144,0.3); font-weight: bold; color: #155724; }
@@ -326,7 +326,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('checkPassword').addEventListener('click', () => {
-    if(document.getElementById('monthlyPassword').value === '0000'){
+    if(document.getElementById('monthlyPassword').value === 'Flamino3000'){
         document.getElementById('monthlyTable').style.display = 'table';
         document.getElementById('monthNav').style.display = 'flex';
         document.getElementById('passwordPrompt').style.display = 'none';
