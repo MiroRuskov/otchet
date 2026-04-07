@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 <style>
 body { margin: 0; background: #f0ebf8; font-family: 'Roboto', sans-serif; font-size: 12px; }
-.container { max-width: 900px; margin: 40px auto; padding: 0 10px; }
+.container { max-width: 1000px; margin: 40px auto; padding: 0 10px; }
 .header { background: #673ab7; height: 10px; border-radius: 8px 8px 0 0; }
 .form-title { background: #fff; padding: 24px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 15px; text-align:center; }
 h1 { margin: 0; font-size: 24px; }
@@ -34,13 +34,15 @@ button:disabled { background: #aaa; cursor: not-allowed; }
 #currentTable td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: center; }
 #currentTable tr:nth-child(even) { background-color: #f9f9f9; }
 
-#monthlyTable { width: 800px; border-collapse: separate; border-spacing: 2px; margin-top: 10px; font-size: 8px; }
+#monthlyTable { width: 1000px; border-collapse: separate; border-spacing: 2px; margin-top: 10px; font-size: 8px; }
 #monthlyTable th, #monthlyTable td { padding: 2px 4px; text-align: center; border-radius: 5px; position: relative; min-width: 45px; }
 .date-col { background: #f2f2f2cc; } 
 .expense-col { background: rgba(255,100,100,0.2); color: #800000; }
 .income-col { background: rgba(100,150,255,0.2); color: #003366; }
 .text-col { background: #f8f8f8cc; text-align: left; padding-left: 5px; min-width: 100px; }
 .balance-col { background: rgba(144,238,144,0.3); font-weight: bold; color: #155724; }
+.cash-col { background: #fff9c4; font-weight: bold; color: #856404; }
+.total-row { background: #37474f !important; color: #fff !important; font-weight: bold; }
 .has-val::after { content: '€'; margin-left:1px; font-weight: bold; }
 </style>
 <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
@@ -141,13 +143,15 @@ Parse.serverURL = 'https://parseapi.back4app.com/';
                     <th class="income-col">БАР СЪНСЕТ</th>
                     <th class="income-col">АНИМАТОР</th>
                     <th class="income-col">КАПАРО</th>
-                    <th class="text-col">БЕЛЕЖКИ КАПАРО</th>
+                    <th class="text-col">№ НА КАПАРО</th>
                     <th class="income-col">ДРУГИ</th>
                     <th class="income-col">ПЛАЩАНЕ КАРТА</th>
                     <th class="balance-col">КРАЙНО САЛДО</th>
+                    <th class="cash-col">КАСА</th>
                 </tr>
             </thead>
             <tbody id="monthlyBody"></tbody>
+            <tfoot id="monthlyFoot"></tfoot>
         </table>
     </div>
 </div>
@@ -162,7 +166,6 @@ const mapping = {
     "ПРИХОД АНИМАТОР": 7, "ПРИХОД КАПАРО": 8, "ДУГИ ПРИХОДИ": 10, "ПЛАЩАНЕ С КАРТА": 11
 };
 
-// Функция за автоматично скролване до долу
 function scrollToBottom() {
     const container = document.getElementById('scrollContainer');
     setTimeout(() => {
@@ -195,15 +198,15 @@ function recalculate(allEntries) {
     const y = viewDate.getFullYear();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
     document.getElementById('displayMonthYear').innerText = monthNames[m] + " " + y;
-    document.getElementById('cashLabel').innerText = "НАЛИЧНА КАСА";
 
     const mBody = document.getElementById('monthlyBody');
     mBody.innerHTML = '';
     let monthlyRows = [];
+    let colTotals = new Array(14).fill(0);
 
     for(let d=1; d<=daysInMonth; d++){
         const row = document.createElement('tr');
-        for(let i=0; i<13; i++){
+        for(let i=0; i<14; i++){
             const td = document.createElement('td');
             if(i===0) td.textContent = `${d}.${m+1}`;
             else td.textContent = ''; 
@@ -211,6 +214,7 @@ function recalculate(allEntries) {
             if([1,2,3].includes(i)) td.className='expense-col';
             if([4,5,6,7,8,10,11].includes(i)) td.className='income-col';
             if(i===12) td.className='balance-col';
+            if(i===13) td.className='cash-col';
             if(i===9) td.className='text-col';
             row.appendChild(td);
         }
@@ -226,6 +230,8 @@ function recalculate(allEntries) {
         const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const dayEntries = allEntries.filter(e => e.get("date") === dStr);
         const cells = monthlyRows[d-1];
+        
+        let dailyCashBalance = 0; 
 
         dayEntries.forEach(e => {
             const opt = e.get("option");
@@ -236,12 +242,21 @@ function recalculate(allEntries) {
                 let curVal = parseFloat(cells[col].textContent) || 0;
                 cells[col].textContent = (curVal + val).toFixed(2);
                 cells[col].classList.add('has-val');
+                colTotals[col] += val;
             }
             if(opt === "ПРИХОД КАПАРО") cells[9].textContent = (cells[9].textContent ? cells[9].textContent + ', ' : '') + (e.get("notes") || '');
             
+            // ЛОГИКА КАСА: (Карта + Изнесени) - Внесени
+            if (opt === "ПЛАЩАНЕ С КАРТА" || opt === "ИЗНЕСЕНИ ОТ КАСА") {
+                dailyCashBalance += val;
+            } else if (opt === "ВНЕСЕНИ В КАСА") {
+                dailyCashBalance -= val;
+            }
+
+            // САЛДО (Текуща наличност)
             if (opt !== "ПЛАЩАНЕ С КАРТА") {
                 if (opt === "ИЗНЕСЕНИ ОТ КАСА" || [1,2,3].includes(col)) runningBal -= val;
-                else if (opt === "ВНЕСЕНИ В КАСА" || (col >= 4 && col !== 11)) runningBal += val;
+                else if (opt === "ВНЕСЕНИ В КАСА" || (col >= 4 && col <= 10)) runningBal += val;
             }
 
             if(dStr === todayISO) {
@@ -250,12 +265,35 @@ function recalculate(allEntries) {
                 document.querySelector('#currentTable tbody').appendChild(tr);
             }
         });
+
         cells[12].textContent = runningBal.toFixed(2);
         cells[12].classList.add('has-val');
+
+        // Запис на КАСА за деня (вече с изваждане на внесените)
+        cells[13].textContent = dailyCashBalance.toFixed(2);
+        cells[13].classList.add('has-val');
+        colTotals[13] += dailyCashBalance;
     }
     document.getElementById('currentCash').textContent = runningBal.toFixed(2) + ' €';
+
+    // FOOTER
+    const mFoot = document.getElementById('monthlyFoot');
+    mFoot.innerHTML = '';
+    const fRow = document.createElement('tr');
+    fRow.className = 'total-row';
+    for(let i=0; i<14; i++){
+        const td = document.createElement('td');
+        if(i === 0) td.textContent = "ОБЩО:";
+        else if(i === 9) td.textContent = "";
+        else if(i === 12) td.textContent = runningBal.toFixed(2);
+        else {
+            td.textContent = colTotals[i].toFixed(2);
+        }
+        if(i !== 0 && i !== 9) td.classList.add('has-val');
+        fRow.appendChild(td);
+    }
+    mFoot.appendChild(fRow);
     
-    // Скролваме до долу при всяко преизчисляване
     scrollToBottom();
 }
 
