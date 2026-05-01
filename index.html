@@ -324,7 +324,6 @@ function render(results) {
     let monthlyData = Array.from({length: daysInMonth}, () => new Array(15).fill(0));
     let kaparoNotes = new Array(daysInMonth).fill("");
     
-    // Тези променливи се зануляват при всяко извикване на render (смяна на месец)
     let incomeForVat = 0;
     let invoicesForVat = 0;
     let hasRecordsForThisMonth = false;
@@ -492,22 +491,25 @@ function render(results) {
     document.getElementById('monthlyFoot').innerHTML = '';
     document.getElementById('monthlyFoot').appendChild(fRow);
 
-    // ПОПРАВКА ЗА ДДС: Ако няма записи за месеца, ДДС-то се занулява напълно (0.00).
-    // Ако има записи, се изчислява по формулата.
+    // ПРЕДПАЗНА МЯРКА ЗА ДДС: Зануляваме напълно, ако няма приходи за месеца
     let vatOnIncome = 0;
     let vatOnExpense = 0;
     let finalVat = 0;
 
-    if (hasRecordsForThisMonth) {
+    // Смятаме само ако има реализиран приход, за да не излиза "минус" от заплатите в началото на месеца
+    if (hasRecordsForThisMonth && incomeForVat > 0) {
         vatOnIncome = incomeForVat / 6;
         vatOnExpense = (invoicesForVat + FIXED_SALARY_BASE) / 6;
         finalVat = vatOnIncome - vatOnExpense;
     }
     
+    // Ако разходите са повече от приходите, ДДС за внасяне е 0 (не показваме минус)
+    if (finalVat < 0) finalVat = 0;
+    
     document.getElementById('monthlyVat').textContent = finalVat.toFixed(2) + ' €';
-    document.getElementById('vatFormulaText').innerHTML = hasRecordsForThisMonth ? 
+    document.getElementById('vatFormulaText').innerHTML = (hasRecordsForThisMonth && incomeForVat > 0) ? 
         `<strong>Приход (ДДС):</strong> ${vatOnIncome.toFixed(2)}€<br><strong>Разход (ДДС):</strong> ${vatOnExpense.toFixed(2)}€<br><small>(4x${MRZ_EURO}€ + 2x1020€ + Фактури)</small>` :
-        `Няма записи за избрания месец.`;
+        `Няма реализиран приход за изчисляване на ДДС за избрания месец.`;
 }
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
